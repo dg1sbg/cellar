@@ -31,7 +31,7 @@ CELLAR builds on the following Common Lisp packages:
 * [cells](https://github.com/kennytilton/cells/wiki)
 * [log4cl](https://github.com/7max/log4cl)
 
-All of them a loadable via [quicklisp](https://www.quicklisp.org/).
+All of them are loadable via [quicklisp](https://www.quicklisp.org/).
 
 ## License
 <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />CELLAR is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>. Any violation of this license will be prosecuted. German law applies in all cases and under all circumstances.
