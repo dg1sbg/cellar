@@ -34,7 +34,7 @@ CELLAR builds on the following Common Lisp packages:
 All of them a loadable via [quicklisp](https://www.quicklisp.org/).
 
 ## Reporting Problems
-Generally you can report problems in two fashions, either by [opening an issue ticket](https://github.com/dg1sbg/cellar/issues/new) or by [emailing to CELLAR support](cellar-support@goenninger.net). In both cases, though, you should have the following pieces handy in order for us to be able to help you out as quickly and painlessly as possible:
+Generally you can report problems in two fashions, either by [opening an issue ticket](https://github.com/dg1sbg/cellar/issues/new) or by [emailing to CELLAR support](mailto:cellar-support@goenninger.net). In both cases, though, you should have the following pieces handy in order for us to be able to help you out as quickly and painlessly as possible:
 
 * Your operating system name and version.
 * Your Common Lisp implementation name and version.
@@ -43,4 +43,4 @@ Generally you can report problems in two fashions, either by [opening an issue t
 * Patience.
 
 ## Contact
-You may contact us via email at [cellar-info@goenninger.net](cellar-info@goenninger.net) or via our website [www.goenninger.net](https://www.goenninger.net). See also [frgo's blog](http://ham-and-eggs-from-frgo.blogspot.de) for an occasional post about CELLAR.
+You may contact us via email at [cellar-info@goenninger.net](mailto:cellar-info@goenninger.net) or via our website [www.goenninger.net](https://www.goenninger.net). See also [frgo's blog](http://ham-and-eggs-from-frgo.blogspot.de) for an occasional post about CELLAR.
