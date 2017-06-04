@@ -1,4 +1,6 @@
-# CELLAR LIBRARY - Gönninger B&T's Common Lisp Foundation Library
+# <img src="https://github.com/dg1sbg/cellar/raw/X.01.00/root-cellar.jpg"/>  THE CELLAR LIBRARY
+
+<p><h2><b>Gönninger B&T's Common Lisp Application Foundation Library</b></h2>
 
 ## NOTE:  June 3, 2017 - This contains pre-release X.01.00 of Cellar version A.01.00.
 
@@ -12,7 +14,7 @@ It provides (not a complete list):
 * Most of the functions described in the book On Lisp by Paul Graham
 * An implementation of Finite State Machines
 
-and much more ;-) - you are invited to explore ...
+and much more 😉 - you are invited to explore ...
 
 ## Latest Release
 The upcoming release is [TRIANGULUM - CELLAR X.01.00](https://github.com/dg1sbg/cellar/releases/tag/CELLAR_PREREL_X0100). See the [changes](https://github.com/dg1sbg/cellar/milestone/1) for this release.
