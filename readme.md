@@ -15,7 +15,7 @@ It provides (not a complete list):
 and much more ;-) - you are invited to explore ...
 
 ## Latest Release
-The upcoming release is [TRIANGULUM - CELLAR X.01.00](https://github.com/dg1sbg/cellar/releases/tag/CELLAR_PREREL_X0100). See the planned [changes](https://github.com/dg1sbg/cellar/milestone/1) for this release.
+The upcoming release is [TRIANGULUM - CELLAR X.01.00](https://github.com/dg1sbg/cellar/releases/tag/CELLAR_PREREL_X0100). See the [changes](https://github.com/dg1sbg/cellar/milestone/1) for this release.
 
 ## Required Common Lisp Packages
 CELLAR builds on the following Common Lisp packages:
@@ -32,6 +32,9 @@ CELLAR builds on the following Common Lisp packages:
 * [log4cl](https://github.com/7max/log4cl)
 
 All of them a loadable via [quicklisp](https://www.quicklisp.org/).
+
+## License
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />CELLAR is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>. Any violation of this license will be prosecuted. German law applies in all cases and under all circumstances.
 
 ## Reporting Problems
 Generally you can report problems in two fashions, either by [opening an issue ticket](https://github.com/dg1sbg/cellar/issues/new) or by [emailing to CELLAR support](mailto:cellar-support@goenninger.net). In both cases, though, you should have the following pieces handy in order for us to be able to help you out as quickly and painlessly as possible:
