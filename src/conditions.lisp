@@ -7,10 +7,10 @@
 ;;; SPECIAL VARS
 ;;; --------------------------------------------------------------
 
-(defv *catch-errors-p*    nil)
-(defv *invoke-debugger-p* nil)
-(defv *print-backtrace-p* nil)
-(defv *log-using-log4cl*  t)
+(defv *catch-errors-p*      nil)
+(defv *invoke-debugger-p*   nil)
+(defv *print-backtrace-p*   nil)
+(defv *log-using-log4cl-p*    t)
 
 (defc +severity-level-emergency+ 0)
 (defc +severity-level-alert+     1)
@@ -37,25 +37,26 @@
 
 (defstruct rds-info
   ;; Example: =G01 LAC21 BC010 -MA01
-  (plant-function-designator    :type 'string) ;; Level 0, =ANN
-  (main-function-designator     :type 'string) ;; Level 1, AAANN
-  (sub-function-designator      :type 'string) ;; Level 2, AANNN
-  (product-reference-designator :type 'string) ;; Level 3, -AANN
+  (plant-function-designator    "" :type string) ;; Level 0, =ANN
+  (main-function-designator     "" :type string) ;; Level 1, AAANN
+  (sub-function-designator      "" :type string) ;; Level 2, AANNN
+  (product-reference-designator "" :type string) ;; Level 3, -AANN
   )
+
+(deftype category-nr-type ()
+  '(integer 0 *))
 
 (defstruct rds-object-info
   ;; 1 = Piece Part
   ;; 2 =
-  (category-nr    :type 'integer)
-  (category-title :type 'string))
+  (category-nr    0  :type category-nr-type)
+  (category-title "" :type string))
 
 (defstruct msg-info
-  (category-nr      :type 'integer)
-  (category-title   :type 'string)
-  (category-keyword :type 'symbol)
+  (category-nr      0          :type category-nr-type)
+  (category-title   ""         :type string)
+  (category-keyword :undefined :type symbol)
   )
-
-
 
 (defun make-rds-info-string (&key
 			       plant-function-designator$
@@ -70,34 +71,36 @@
 	    (or product-reference-designator$ ""))
     string))
 
-
 (defstruct msg
-  (nr :type 'integer)
-  (text :type 'cellar:text))
+  (nr    -1 :type integer)
+  (text  cellar:*default-nil-text* :type cellar:text))
 
-(defun default-log-emergency (&rest args)
-  (log:fatal args))
+(eval-when (:compile-toplevel :load-toplevel :execute)
 
-(defun default-log-alert (&rest args)
-  (log:fatal args))
+  (defun default-log-emergency (&rest args)
+    (log:fatal args))
 
-(defun default-log-critical (&rest args)
-  (log:fatal args))
+  (defun default-log-alert (&rest args)
+    (log:fatal args))
 
-(defun default-log-error (&rest args)
-  (log:error args))
+  (defun default-log-critical (&rest args)
+    (log:fatal args))
 
-(defun default-log-warn (&rest args)
-  (log:warn args))
+  (defun default-log-error (&rest args)
+    (log:error args))
 
-(defun default-log-notice (&rest args)
-  (log:notice args))
+  (defun default-log-warn (&rest args)
+    (log:warn args))
 
-(defun default-log-info (&rest args)
-  (log:info args))
+  (defun default-log-notice (&rest args)
+    (log:info args))
 
-(defun default-log-debug (&rest args)
-  (log:debug args))
+  (defun default-log-info (&rest args)
+    (log:info args))
+
+  (defun default-log-debug (&rest args)
+    (log:debug args))
+  )
 
 (defv *log-emergency-fn*  #'default-log-emergency)
 (defv *log-alert-fn*      #'default-log-alert)
@@ -115,7 +118,7 @@
 ;;; --------------------------------------------------------------
 
 (defun set-severity-level-log-fn (severity-level log-fn)
-  (setf (gethash severity-level) *severity-level-to-log-fn-ht* log-fn))
+  (setf (gethash severity-level *severity-level-to-log-fn-ht*) log-fn))
 
 (defun init-severity-level-to-log-fn-ht ()
   (set-severity-level-log-fn +severity-level-emergency+ *log-emergency-fn*)
@@ -161,7 +164,9 @@
 
 ;;; Report function used by all conditions
 
-(defun report (condition stream)
+(defun report-condition (condition &optional stream)
+
+  (check-type condition condition)
 
   (with-output-to-string (s string)
 
@@ -172,7 +177,8 @@
 	   (format-arguments (format-arguments condition))
 	   (format-arguments (if (listp format-arguments)
 				 (car format-arguments)
-				 format-arguments)))
+				 format-arguments))
+	   (condition-category (category condition)))
       (format s "~a @ ~a ~d => ~&"
 	      severity-label
 	      (src      condition)
@@ -180,20 +186,23 @@
 	      (nr       condition))
       (format s "~&*** ")
 
-    (if format-arguments
-	(apply #'format stream
-	       format-control
-	       format-arguments)
-	(format stream format-control))
-    (format stream "~%"))
-  (when (and *print-backtrace-p*
-	     (eql (category condition) :CRITICAL))
-    (format stream "~&*** Backtrace:~&")
-    (format stream "~&~A~%" (get-backtrace))))
+      (apply #'format s
+	     format-control
+	     format-arguments)
+      (format s "~%")
 
-  (when stream
-    (let* (
-)
+      (when (and *print-backtrace-p*
+		 (eql condition-category :CRITICAL))
+	(format s "~&*** Backtrace:~&")
+	(format s "~&~A~%" (get-backtrace)))
+
+      (when stream
+	(format stream "~s" string))
+
+      (when *log-using-log4cl-p*
+	(let ((log-fn (severity-level-to-log-fn condition-category)))
+	  (apply log-fn string)))
+      )))
 
 ;;; BASE CONDITION
 
@@ -206,15 +215,15 @@
    (format-arguments :initarg :format-arguments :accessor format-arguments
                      :initform nil))
   (:report (lambda (condition stream)
-             (report condition stream)))
+             (report-condition condition stream)))
   (:documentation "Superclass for all conditions."))
 
 ;;; DEBUG CONDITION
 
 (define-condition debug-condition (cellar-condition)
   ()
-  (:report (lambda (condition stream)
-             (report condition stream)))
+  (:default-initargs
+   :category :debug)
   (:documentation "Superclass for all debug messages."))
 
 (define-condition simple-debug-condition (debug-condition simple-condition)
@@ -225,7 +234,27 @@
   "Signals a condition of type CCAG-SIMPLE-DEBUG with the provided
 format control and arguments."
   (signal 'simple-debug-condition
-          :category :DEBUG
+          :src src
+          :nr nr
+          :format-control format-control
+          :format-arguments format-arguments))
+
+;;; INFO CONDITION
+
+(define-condition info-condition (cellar-condition)
+  ()
+  (:default-initargs
+   :category :info)
+  (:documentation "Superclass for all info messages."))
+
+(define-condition simple-info-condition (info-condition simple-condition)
+  ()
+  (:documentation "Like INFO but with formatting capabilities."))
+
+(defun signal-info-condition (src nr format-control &rest format-arguments)
+  "Signals a condition of type SIMPLE-DEBUG with the provided
+format control and arguments."
+  (signal 'simple-info-condition
           :src src
           :nr nr
           :format-control format-control
@@ -235,19 +264,39 @@ format control and arguments."
 
 (define-condition notice-condition (cellar-condition)
   ()
+  (:default-initargs
+   :category :notice)
   (:documentation "Superclass for all Notice messages."))
 
 (define-condition simple-notice-condition (notice-condition simple-condition)
   ()
-  (:report (lambda (condition stream)
-             (report condition stream)))
   (:documentation "Like NOTICE but with formatting capabilities."))
 
 (defun signal-notice-condition (src nr format-control &rest format-arguments)
   "Signals a condition of type CCAG-SIMPLE-NOTICE with the provided
 format control and arguments."
   (signal 'simple-notice-condition
-          :category :NOTICE
+          :src src
+          :nr nr
+          :format-control format-control
+          :format-arguments format-arguments))
+
+;;; WARNING CONDITION
+
+(define-condition warning-condition (cellar-condition)
+  ()
+  (:documentation "Superclass for all Notice messages."))
+
+(define-condition simple-warning-condition (notice-condition simple-condition)
+  ()
+  (:default-initargs
+   :category :warning)
+  (:documentation "Like WARNING but with formatting capabilities."))
+
+(defun signal-warning-condition (src nr format-control &rest format-arguments)
+  "Signals a condition of type SIMPLE-WARNING with the provided
+format control and arguments."
+  (signal 'simple-warning-condition
           :src src
           :nr nr
           :format-control format-control
@@ -257,63 +306,79 @@ format control and arguments."
 
 (define-condition error-condition (cellar-condition error)
   ()
+  (::default-initargs
+   :category :error)
   (:documentation "Superclass for all errors."))
 
 (define-condition simple-error-condition (error-condition simple-condition)
   ()
-  (:report (lambda (condition stream)
-             (report condition stream)))
-  (:documentation "Like CCAG-ERROR but with formatting capabilities."))
+  (:documentation "Like ERROR but with formatting capabilities."))
 
 (defun signal-error-condition (src nr format-control &rest format-arguments)
   "Signals an error of type SIMPLE-ERROR with the provided
 format control and arguments."
   (error 'simple-error-condition
-	 :category :ERROR
 	 :src src
 	 :nr nr
 	 :format-control format-control
 	 :format-arguments format-arguments))
 
-;;; WARNING CONDITION
-
-(define-condition warning-condition (cellar-condition warning)
-  ()
-  (:documentation "Superclass for all warnings."))
-
-(define-condition simple-warning-condition (warning-condition simple-condition)
-  ()
-  (:report (lambda (condition stream)
-             (report condition stream)))
-  (:documentation "Like WARNING-CONDITION but with formatting capabilities."))
-
-(defun signal-warning-condition (src nr format-control &rest format-arguments)
-  "Signals a warning of type SIMPLE-WARNING with the
-provided format control and arguments."
-  (warn 'simple-warning-condition
-	:category :WARNING
-	:src src
-	:nr nr
-	:format-control format-control
-	:format-arguments format-arguments))
-
 ;;; CRITICAL CONDITION
 
 (define-condition critical-condition (cellar-condition error)
   ()
+  (:default-initargs
+   :category :critical)
   (:documentation "Superclass for all critical errors."))
 
 (define-condition simple-critical-condition (critical-condition simple-condition)
   ()
-  (:report (lambda (condition stream)
-             (report condition stream)))
   (:documentation "Like CRITICAL but with formatting capabilities."))
 
 (defun signal-critical-condition (src nr format-control &rest format-arguments)
   "Signals an error of type SIMPLE-CRITICAL with the provided
 format control and arguments."
   (error 'simple-critical-condition
-	 :category :CRITICAL
+	 :src src
+	 :nr nr
+	 :format-control format-control
+	 :format-arguments format-arguments))
+
+;;; ALERT CONDITION
+
+(define-condition alert-condition (cellar-condition error)
+  ()
+  (:default-initargs
+   :category :alert)
+  (:documentation "Superclass for all alerts."))
+
+(define-condition simple-alert-condition (alert-condition simple-condition)
+  ()
+  (:documentation "Like WARNING-CONDITION but with formatting capabilities."))
+
+(defun signal-alert-condition (src nr format-control &rest format-arguments)
+  "Signals a warning of type SIMPLE-ALERT with the provided format control and arguments."
+  (error 'simple-alert-condition
+	 :src src
+	 :nr nr
+	 :format-control format-control
+	 :format-arguments format-arguments))
+
+;;; EMERGENCY CONDITION
+
+(define-condition emegrency-condition (cellar-condition error)
+  ()
+  (:default-initargs
+   :category :emergency)
+  (:documentation "Superclass for all emergencies."))
+
+(define-condition simple-emergency-condition (emergency-condition simple-condition)
+  ()
+  (:documentation "Like EMERGENCY-CONDITION but with formatting capabilities."))
+
+(defun signal-emergemcy-condition (src nr format-control &rest format-arguments)
+  "Signals a warning of type SIMPLE-EMERGENCY with the provided format control and arguments."
+  (error 'simple-emergency-condition
 	 :src src
 	 :nr nr
 	 :format-control format-control
